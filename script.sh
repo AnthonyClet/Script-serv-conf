@@ -21,18 +21,10 @@ then
 	ln -s /snap/bin/certbot /usr/bin/certbot
 fi
 
-echo "////////////////////   Pull sources git   ///////////////////////////////"
-
-cd /var/www/html
-git pull origin master
-composer install
-chown -R www-data:www-data /var/www/html/
-source .env.dev
-
 echo "/////////////////////////   Test md5sum   //////////////////////////////"
 
-MD5_DEST=$(md5sum /etc/apache2/sites-available/000-default.conf | awk '{print $1}')
 MD5_SRC=$(md5sum 000-default.conf | awk '{print $1}')
+MD5_DEST=$(md5sum /etc/apache2/sites-available/000-default.conf | awk '{print $1}')
 
 if [ "$MD5_DEST" != "$MD5_SRC" ]
 then
@@ -40,5 +32,22 @@ then
 	cp 000-default.conf /etc/apache2/sites-available/000-default.conf
 	service apache2 restart
 fi
+
+mkdir /var/www/html
+
+echo "////////////////////   Pull sources git   ///////////////////////////////"
+
+VERIFY_GIT=$(ls /var/www/html | grep .git)
+
+if [ -z "$VERIFY_GIT" ]
+then
+	ln -s /var/www/html/.git https://github.com/AnthonyClet/Script-serv-conf.git
+fi
+
+cd /var/www/html
+git pull origin master
+composer install
+chown -R www-data:www-data /var/www/html/
+source .env.dev
 
 echo "penser a taper la commande : certbot --apache"
